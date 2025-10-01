@@ -1,0 +1,110 @@
+#include <Wire.h>
+#include <WiFi.h>
+#include <ArduinoOTA.h>
+
+// Configurações Wi-Fi
+const char* ssid = "REDEWORK";
+const char* password = "Acessonet05";
+
+// ADXL345
+#define ADXL345_ADDRESS 0x53
+#define REG_POWER_CTL 0x2D
+#define POWER_CTL_MEASURE_MODE 0x08
+#define REG_DATAX0 0x32
+#define REG_DATAX1 0x33
+#define REG_DATAY0 0x34
+#define REG_DATAY1 0x35
+#define REG_DATAZ0 0x36
+#define REG_DATAZ1 0x37
+
+int wifiMsgCount = 0; // contador de vezes que a mensagem de Wi-Fi foi exibida
+
+void setup() {
+  Serial.begin(115200);
+  while (!Serial);
+  Serial.println("Iniciando ESP32...");
+
+  Wire.begin();
+  initADXL345();
+
+  // Conecta ao Wi-Fi
+  Serial.print("Conectando ao Wi-Fi ");
+  WiFi.begin(ssid, password);
+  
+  // Inicializa OTA
+  setupOTA();
+}
+
+void loop() {
+  ArduinoOTA.handle(); // Mantém OTA ativa
+
+  // Lê dados do sensor
+  int16_t x, y, z;
+  readADXL345(&x, &y, &z);
+
+  // Verifica Wi-Fi e imprime apenas 3 vezes
+  if (WiFi.status() == WL_CONNECTED && wifiMsgCount < 3) {
+    Serial.print("Wi-Fi conectado! IP: ");
+    Serial.println(WiFi.localIP());
+    wifiMsgCount++;
+  } else if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Wi-Fi NÃO conectado");
+  }
+
+  // Mostra dados do ADXL345
+  Serial.print("X: "); Serial.print(x);
+  Serial.print("  Y: "); Serial.print(y);
+  Serial.print("  Z: "); Serial.println(z);
+
+  delay(100); // Delay pequeno para leitura rápida
+}
+
+// ================= Funções ADXL345 =================
+void initADXL345() {
+  writeRegister(REG_POWER_CTL, POWER_CTL_MEASURE_MODE);
+}
+
+void readADXL345(int16_t *x, int16_t *y, int16_t *z) {
+  *x = readRegister(REG_DATAX0, REG_DATAX1);
+  *y = readRegister(REG_DATAY0, REG_DATAY1);
+  *z = readRegister(REG_DATAZ0, REG_DATAZ1);
+}
+
+int16_t readRegister(byte reg_low, byte reg_high) {
+  Wire.beginTransmission(ADXL345_ADDRESS);
+  Wire.write(reg_low);
+  Wire.endTransmission(false);
+  Wire.requestFrom(ADXL345_ADDRESS, 2);
+  byte lowByte = Wire.read();
+  byte highByte = Wire.read();
+  return (int16_t)((highByte << 8) | lowByte);
+}
+
+void writeRegister(byte reg, byte value) {
+  Wire.beginTransmission(ADXL345_ADDRESS);
+  Wire.write(reg);
+  Wire.write(value);
+  Wire.endTransmission();
+}
+
+// ================= Funções OTA =================
+void setupOTA() {
+  ArduinoOTA.onStart([]() {
+    String type = (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem";
+    Serial.println("Iniciando atualização de " + type);
+  });
+  ArduinoOTA.onEnd([]() { Serial.println("\nFim OTA"); });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progresso OTA: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Erro OTA [%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Erro de autenticação");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Erro ao iniciar");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Erro de conexão");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Erro ao receber");
+    else if (error == OTA_END_ERROR) Serial.println("Erro ao finalizar");
+  });
+  ArduinoOTA.begin();
+  Serial.println("OTA pronta para uso");
+}
