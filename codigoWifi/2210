@@ -1,0 +1,157 @@
+#include <Wire.h>
+#include <WiFi.h>
+#include <ArduinoOTA.h>
+#include <PubSubClient.h>
+
+const char* ssid = "REDEWORK";
+const char* password = "Acessonet05";
+
+const char* mqtt_server = "broker.hivemq.com";
+const int mqtt_port = 1883;
+const char* mqtt_topic = "iot/sala1/vibracao";
+
+
+// =================== OBJETOS ===================
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+// =================== ADXL345 ===================
+#define ADXL345_ADDRESS 0x53
+#define REG_POWER_CTL 0x2D
+#define POWER_CTL_MEASURE_MODE 0x08
+#define REG_DATAX0 0x32
+#define REG_DATAY0 0x34
+#define REG_DATAZ0 0x36
+
+// =================== SETUP ===================
+void setup() {
+  Serial.begin(115200);
+  while (!Serial);
+
+  Serial.println("Iniciando ESP32...");
+
+  Wire.begin();
+  initADXL345();
+
+  // Conectar ao Wi-Fi
+  WiFi.begin(ssid, password);
+  Serial.print("Conectando ao Wi-Fi");
+  int tentativas = 0;
+  while (WiFi.status() != WL_CONNECTED && tentativas < 20) {
+    delay(500);
+    Serial.print(".");
+    tentativas++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nWi-Fi conectado!");
+    Serial.print("IP: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("\nFalha ao conectar ao Wi-Fi");
+  }
+
+  // Configura servidor MQTT
+  client.setServer(mqtt_server, mqtt_port);
+
+  // Inicializa OTA
+  setupOTA();
+}
+
+// =================== LOOP ===================
+void loop() {
+  ArduinoOTA.handle(); // Mantém OTA ativa
+
+  // Conecta ao MQTT se necessário
+  if (!client.connected()) {
+    reconnectMQTT();
+  }
+  client.loop(); // Mantém conexão MQTT ativa
+
+  // Lê dados do sensor
+  int16_t x, y, z;
+  readADXL345(&x, &y, &z);
+
+  // Mostra no Serial Monitor
+  Serial.print("X: "); Serial.print(x);
+  Serial.print("  Y: "); Serial.print(y);
+  Serial.print("  Z: "); Serial.println(z);
+
+  // Envia via MQTT
+  char payload[50];
+  snprintf(payload, sizeof(payload), "X:%d Y:%d Z:%d", x, y, z);
+  client.publish(mqtt_topic, payload);
+
+  delay(500); // Frequência de envio (ajustável)
+}
+
+// =================== ADXL345 ===================
+void initADXL345() {
+  writeRegister(REG_POWER_CTL, POWER_CTL_MEASURE_MODE);
+}
+
+void readADXL345(int16_t *x, int16_t *y, int16_t *z) {
+  *x = read16(REG_DATAX0);
+  *y = read16(REG_DATAY0);
+  *z = read16(REG_DATAZ0);
+}
+
+int16_t read16(byte reg) {
+  Wire.beginTransmission(ADXL345_ADDRESS);
+  Wire.write(reg);
+  Wire.endTransmission(false);
+  Wire.requestFrom(ADXL345_ADDRESS, 2);
+  byte low = Wire.read();
+  byte high = Wire.read();
+  return (int16_t)((high << 8) | low);
+}
+
+void writeRegister(byte reg, byte value) {
+  Wire.beginTransmission(ADXL345_ADDRESS);
+  Wire.write(reg);
+  Wire.write(value);
+  Wire.endTransmission();
+}
+
+// =================== MQTT ===================
+void reconnectMQTT() {
+  while (!client.connected()) {
+    Serial.print("Conectando ao MQTT...");
+    if (client.connect("ESP32Client")) {
+      Serial.println("conectado!");
+    } else {
+      Serial.print("falhou, rc=");
+      Serial.print(client.state());
+      Serial.println(" tentando novamente em 5s");
+      delay(5000);
+    }
+  }
+}
+
+// =================== OTA ===================
+void setupOTA() {
+  ArduinoOTA.onStart([]() {
+    String type = (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem";
+    Serial.println("Iniciando atualização OTA de " + type);
+  });
+
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nFim da atualização OTA");
+  });
+
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progresso OTA: %u%%\r", (progress / (total / 100)));
+  });
+
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Erro OTA [%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Erro de autenticação");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Erro ao iniciar");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Erro de conexão");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Erro ao receber");
+    else if (error == OTA_END_ERROR) Serial.println("Erro ao finalizar");
+  });
+
+  ArduinoOTA.begin();
+  Serial.println("OTA pronta para uso");
+}
