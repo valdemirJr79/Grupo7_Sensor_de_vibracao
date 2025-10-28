@@ -1,0 +1,164 @@
+[
+    {
+        "id": "7d4ff4a794e6aae6",
+        "type": "tab",
+        "label": "Fluxo 3",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "e66ae4e72c314bd0",
+        "type": "mqtt in",
+        "z": "7d4ff4a794e6aae6",
+        "name": "Assinar Vibração",
+        "topic": "iot/sala1/vibracao",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "broker-hivemq",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 120,
+        "y": 220,
+        "wires": [
+            [
+                "792a120de70bc392"
+            ]
+        ]
+    },
+    {
+        "id": "792a120de70bc392",
+        "type": "json",
+        "z": "7d4ff4a794e6aae6",
+        "name": "Converter JSON",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 310,
+        "y": 220,
+        "wires": [
+            [
+                "c0c0d1294df269ed"
+            ]
+        ]
+    },
+    {
+        "id": "c0c0d1294df269ed",
+        "type": "function",
+        "z": "7d4ff4a794e6aae6",
+        "name": "Separar Eixos e Vibração",
+        "func": "return [\n  { topic: 'X', payload: msg.payload.X },\n  { topic: 'Y', payload: msg.payload.Y },\n  { topic: 'Z', payload: msg.payload.Z },\n  { topic: 'Vibracao', payload: msg.payload.Vibracao }\n];",
+        "outputs": 4,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 220,
+        "wires": [
+            [
+                "d36ed64dc0ff36dc"
+            ],
+            [
+                "d36ed64dc0ff36dc"
+            ],
+            [
+                "d36ed64dc0ff36dc"
+            ],
+            [
+                "d36ed64dc0ff36dc"
+            ]
+        ]
+    },
+    {
+        "id": "d36ed64dc0ff36dc",
+        "type": "ui_chart",
+        "z": "7d4ff4a794e6aae6",
+        "name": "Gráfico de Vibração",
+        "group": "1f03bcbe19ee0aba",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "label": "Leitura de Vibração ADXL345",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "Aguardando dados...",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "100",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#ff6600",
+            "#00aaff",
+            "#44cc44",
+            "#aa00ff",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 750,
+        "y": 220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "broker-hivemq",
+        "type": "mqtt-broker",
+        "name": "Broker HiveMQ",
+        "broker": "broker.hivemq.com",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "1f03bcbe19ee0aba",
+        "type": "ui_group",
+        "name": "Monitor de Vibração",
+        "tab": "f40dbc964588b1c5",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "f40dbc964588b1c5",
+        "type": "ui_tab",
+        "name": "ADXL345 - ESP32",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
