@@ -1,0 +1,50 @@
+[
+    {
+        "id": "e66ae4e72c314bd0",
+        "type": "mqtt in",
+        "z": "7d4ff4a794e6aae6",
+        "name": "Assinar Vibração",
+        "topic": "iot/sala1/vibracao",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "broker-hivemq",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 120,
+        "y": 220,
+        "wires": [
+            [
+                "792a120de70bc392"
+            ]
+        ]
+    },
+    {
+        "id": "broker-hivemq",
+        "type": "mqtt-broker",
+        "name": "Broker HiveMQ",
+        "broker": "broker.hivemq.com",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    }
+]
