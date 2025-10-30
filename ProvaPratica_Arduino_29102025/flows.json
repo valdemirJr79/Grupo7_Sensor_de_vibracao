@@ -1,0 +1,65 @@
+[
+    {
+        "id": "3bdd86c4605edd53",
+        "type": "ui_chart",
+        "z": "3dac2de2272cc212",
+        "name": "Gráfico de Vibração",
+        "group": "1f03bcbe19ee0aba",
+        "order": 1,
+        "width": "9",
+        "height": "7",
+        "label": "Leitura de Vibração ADXL345 (em G)",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "Aguardando dados...",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "5",
+        "removeOlder": 1,
+        "removeOlderPoints": "100",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#ff6600",
+            "#00aaff",
+            "#44cc44",
+            "#aa00ff",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 970,
+        "y": 220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1f03bcbe19ee0aba",
+        "type": "ui_group",
+        "name": "Monitor de Vibração",
+        "tab": "f40dbc964588b1c5",
+        "order": 1,
+        "disp": true,
+        "width": "9",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "f40dbc964588b1c5",
+        "type": "ui_tab",
+        "name": "ADXL345 - ESP32",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
